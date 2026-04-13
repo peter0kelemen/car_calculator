@@ -38,8 +38,12 @@ function calcTax(prefix) {
     const hp = Number(document.getElementById(prefix + '-hp').value);
     const age = Number(document.getElementById(prefix + '-age').value);
 
+    if (!hp || hp <= 0 || !Number.isFinite(hp) || age < 0 || !Number.isFinite(age)) {
+        document.getElementById(prefix + '-tax').value = 0;
+        return;
+    }
+
     const kw = Math.round(hp * 0.7355);
-    // Use Calculator.getAnnualTaxRate
     const rate = Calculator.getAnnualTaxRate(age);
 
     document.getElementById(prefix + '-tax').value = kw * rate;
@@ -62,22 +66,39 @@ function validate() {
 
     check('global-km',        v => v > 0,              'Éves futás: pozitív szám szükséges');
     check('global-years',     v => v > 0 && v <= 50,   'Tervezett évek: 1–50 közé kell esnie');
-    check('global-interest',  v => v >= 0,             'Állampapír kamat: nem lehet negatív');
+    check('global-interest',  v => v >= 0 && v <= 100,  'Állampapír kamat: 0–100% közé kell esnie');
     check('global-fuelprice', v => v >= 0,             'Üzemanyagár: nem lehet negatív');
-    check('global-evcharge',  v => v >= 0,             'EV töltési ár: nem lehet negatív');
-    check('global-solar',     v => v >= 0,             'Napelem többlet: nem lehet negatív');
+    check('global-evcharge',  v => v >= 0,              'EV töltési ár: nem lehet negatív');
+    check('global-solar',     v => v >= 0,              'Napelem többlet: nem lehet negatív');
+    check('global-inflation', v => v >= 0 && v <= 200,  'Infláció: 0–200% közé kell esnie');
 
     for (const [prefix, label] of [['a', '"A"'], ['b', '"B"']]) {
         check(`${prefix}-price`,    v => v > 0,               `${label} autó vételár: pozitív szám szükséges`);
         check(`${prefix}-hp`,       v => v > 0,               `${label} autó teljesítmény: pozitív szám szükséges`);
         check(`${prefix}-cons`,     v => v > 0,               `${label} autó fogyasztás: pozitív szám szükséges`);
         check(`${prefix}-dep-rate`, v => v >= 0 && v <= 100,  `${label} autó értékvesztés: 0–100% közé kell esnie`);
+        check(`${prefix}-service`,  v => v >= 0,              `${label} autó szerviz: nem lehet negatív`);
+        check(`${prefix}-tire`,     v => v >= 0,              `${label} autó gumiabroncs: nem lehet negatív`);
+        check(`${prefix}-ins`,      v => v >= 0,              `${label} autó biztosítás: nem lehet negatív`);
+        if (document.getElementById(`${prefix}-imp`).checked) {
+            check(`${prefix}-regtax`,     v => v >= 0, `${label} autó reg. adó: nem lehet negatív`);
+            check(`${prefix}-importmisc`, v => v >= 0, `${label} autó hazahozatal: nem lehet negatív`);
+        }
     }
 
     const errorBox = document.getElementById('error-box');
     if (errors.length > 0) {
-        errorBox.innerHTML = '<strong>Kérlek javítsd az alábbi hibákat:</strong><ul>' +
-            errors.map(e => `<li>${e}</li>`).join('') + '</ul>';
+        errorBox.textContent = '';
+        const strong = document.createElement('strong');
+        strong.textContent = 'Kérlek javítsd az alábbi hibákat:';
+        const ul = document.createElement('ul');
+        errors.forEach(msg => {
+            const li = document.createElement('li');
+            li.textContent = msg;
+            ul.appendChild(li);
+        });
+        errorBox.appendChild(strong);
+        errorBox.appendChild(ul);
         errorBox.style.display = 'block';
     } else {
         errorBox.style.display = 'none';
@@ -150,7 +171,10 @@ function calculateBoth() {
     const resB = calculateCar('b');
     const km = Number(document.getElementById('global-km').value);
 
-    const fmt = (n) => new Intl.NumberFormat('hu-HU', { style: 'currency', currency: 'HUF', maximumFractionDigits: 0 }).format(n);
+    const fmt = (n) => {
+        if (!Number.isFinite(n)) return '—';
+        return new Intl.NumberFormat('hu-HU', { style: 'currency', currency: 'HUF', maximumFractionDigits: 0 }).format(n);
+    };
 
     // Fill Table A
     document.getElementById('res-a-fuel').innerText = fmt(resA.fuel);
@@ -194,9 +218,30 @@ function calculateBoth() {
 }
 
 // Init
-updateUI('a');
-updateUI('b');
+document.addEventListener('DOMContentLoaded', function () {
+    // Radio: updateUI
+    ['a-dom', 'a-imp', 'a-ice', 'a-ev'].forEach(id =>
+        document.getElementById(id).addEventListener('change', () => updateUI('a'))
+    );
+    ['b-dom', 'b-imp', 'b-ice', 'b-ev'].forEach(id =>
+        document.getElementById(id).addEventListener('change', () => updateUI('b'))
+    );
 
-// Elavult eredmény jelzése minden input változásra
-document.querySelectorAll('input').forEach(el => el.addEventListener('input', markStale));
-document.querySelectorAll('input[type=radio]').forEach(el => el.addEventListener('change', markStale));
+    // Tax recalc on age/hp change
+    ['a-age', 'a-hp'].forEach(id =>
+        document.getElementById(id).addEventListener('change', () => calcTax('a'))
+    );
+    ['b-age', 'b-hp'].forEach(id =>
+        document.getElementById(id).addEventListener('change', () => calcTax('b'))
+    );
+
+    // Calculate button
+    document.getElementById('calc-btn').addEventListener('click', calculateBoth);
+
+    // Elavult eredmény jelzése minden input változásra
+    document.querySelectorAll('input').forEach(el => el.addEventListener('input', markStale));
+    document.querySelectorAll('input[type=radio]').forEach(el => el.addEventListener('change', markStale));
+
+    updateUI('a');
+    updateUI('b');
+});
