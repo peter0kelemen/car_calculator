@@ -64,25 +64,25 @@ function validate() {
         }
     }
 
-    check('global-km',        v => v > 0,              'Éves futás: pozitív szám szükséges');
-    check('global-years',     v => v > 0 && v <= 50,   'Tervezett évek: 1–50 közé kell esnie');
-    check('global-interest',  v => v >= 0 && v <= 100,  'Állampapír kamat: 0–100% közé kell esnie');
-    check('global-fuelprice', v => v >= 0,             'Üzemanyagár: nem lehet negatív');
-    check('global-evcharge',  v => v >= 0,              'EV töltési ár: nem lehet negatív');
-    check('global-solar',     v => v >= 0,              'Napelem többlet: nem lehet negatív');
-    check('global-inflation', v => v >= 0 && v <= 200,  'Infláció: 0–200% közé kell esnie');
+    check('global-km',        v => v > 0 && v <= 200000,   'Éves futás: 1–200 000 km közé kell esnie');
+    check('global-years',     v => v > 0 && v <= 20,       'Tervezett évek: 1–20 közé kell esnie');
+    check('global-interest',  v => v >= 0 && v <= 20,      'Állampapír kamat: 0–20% közé kell esnie');
+    check('global-fuelprice', v => v >= 0 && v <= 2000,    'Üzemanyagár: 0–2 000 Ft/L közé kell esnie');
+    check('global-evcharge',  v => v >= 0 && v <= 2000,    'EV töltési ár: 0–2 000 Ft/kWh közé kell esnie');
+    check('global-solar',     v => v >= 0 && v <= 20000,   'Napelem-többlet: 0–20 000 kWh/év közé kell esnie');
+    check('global-inflation', v => v >= 0 && v <= 25,      'Infláció: 0–25% közé kell esnie');
 
     for (const [prefix, label] of [['a', '"A"'], ['b', '"B"']]) {
-        check(`${prefix}-price`,    v => v > 0,               `${label} autó vételár: pozitív szám szükséges`);
-        check(`${prefix}-hp`,       v => v > 0,               `${label} autó teljesítmény: pozitív szám szükséges`);
-        check(`${prefix}-cons`,     v => v > 0,               `${label} autó fogyasztás: pozitív szám szükséges`);
-        check(`${prefix}-dep-rate`, v => v >= 0 && v <= 100,  `${label} autó értékvesztés: 0–100% közé kell esnie`);
-        check(`${prefix}-service`,  v => v >= 0,              `${label} autó szerviz: nem lehet negatív`);
-        check(`${prefix}-tire`,     v => v >= 0,              `${label} autó gumiabroncs: nem lehet negatív`);
-        check(`${prefix}-ins`,      v => v >= 0,              `${label} autó biztosítás: nem lehet negatív`);
+        check(`${prefix}-price`,    v => v > 0 && v <= 100000000,  `${label} autó vételár: 1–100 000 000 Ft közé kell esnie`);
+        check(`${prefix}-hp`,       v => v > 0 && v <= 1000,       `${label} autó teljesítmény: 1–1 000 LE közé kell esnie`);
+        check(`${prefix}-cons`,     v => v > 0 && v <= 50,         `${label} autó fogyasztás: 0–50 közé kell esnie`);
+        check(`${prefix}-dep-rate`, v => v >= 0 && v <= 50,        `${label} autó értékvesztés: 0–50% közé kell esnie`);
+        check(`${prefix}-service`,  v => v >= 0 && v <= 400000,    `${label} autó szerviz: 0–400 000 Ft/év közé kell esnie`);
+        check(`${prefix}-tire`,     v => v >= 0 && v <= 400000,    `${label} autó gumiabroncs: 0–400 000 Ft/év közé kell esnie`);
+        check(`${prefix}-ins`,      v => v >= 0 && v <= 400000,    `${label} autó biztosítás: 0–400 000 Ft/év közé kell esnie`);
         if (document.getElementById(`${prefix}-imp`).checked) {
-            check(`${prefix}-regtax`,     v => v >= 0, `${label} autó reg. adó: nem lehet negatív`);
-            check(`${prefix}-importmisc`, v => v >= 0, `${label} autó hazahozatal: nem lehet negatív`);
+            check(`${prefix}-regtax`,     v => v >= 0 && v <= 10000000, `${label} autó reg. adó: 0–10 000 000 Ft közé kell esnie`);
+            check(`${prefix}-importmisc`, v => v >= 0 && v <= 10000000, `${label} autó hazahozatal: 0–10 000 000 Ft közé kell esnie`);
         }
     }
 
