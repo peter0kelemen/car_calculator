@@ -4,7 +4,7 @@
 // Hasznos amikor gyorsan ellenőrizni szeretnénk, hogy az ICE vs EV havi
 // költségek reálisan változnak-e különböző éves km-értékek esetén.
 
-const Calculator = require('./calculator.js');
+const Calculator = require('../src/calculator.js');
 
 const baseParams = {
     interestRate: 0.065,

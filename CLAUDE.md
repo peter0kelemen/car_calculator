@@ -5,63 +5,76 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# Tesztek futtatása
-node --test calculator.test.js
+# Run all tests
+node --test tests/calculator.test.js
 
-# Egy adott teszteset futtatása
-node --test --test-name-pattern="getAnnualTaxRate" calculator.test.js
+# Run a specific test case
+node --test --test-name-pattern="getAnnualTaxRate" tests/calculator.test.js
 
-# Manuális integrációs teszt (havi TCO éves futás szerint)
-node manual_test.js
+# Manual integration test (monthly TCO by annual mileage)
+node tests/manual_test.js
 ```
 
-## Architektúra
+## Architecture
 
-Ez egy böngészőalapú autó TCO (Total Cost of Ownership) összehasonlító kalkulátor két autóra ("A" és "B").
+This is a browser-based car TCO (Total Cost of Ownership) comparison calculator for two cars ("A" and "B").
 
-**`calculator.js`** — Az összes üzleti logika itt található, UMD-szerű wrapper-rel, ami Node.js-ben (`module.exports`) és böngészőben (`window.Calculator`) is működik.
-- `getTransferTaxRate(kw, age)` — Átírási illeték mértéke (kW és kor alapján)
-- `getAnnualTaxRate(age)` — Éves gépjárműadó mértéke (Ft/kW, kor alapján)
-- `calculateTCO(params)` — Fő számítási függvény; évenkénti hurokkal számolja az inflációval növelt üzemanyag-, karbantartási-, biztosítási-, értékcsökkenési és haszonáldozat-költségeket
+```
+/
+├── src/
+│   ├── calculator.js      — business logic
+│   ├── ui.js              — DOM interactions and display logic
+│   └── calculator.css     — all styles
+├── tests/
+│   ├── calculator.test.js — unit tests
+│   ├── manual_test.js     — integration test
+│   └── validation_edge_test.js — validation bounds tests
+├── index.html             — entry point
+├── CLAUDE.md
+└── README.md
+```
 
-**`calculator.html`** — A teljes UI egyetlen HTML fájlban, külső `calculator.css`-sel. A két külső script (`calculator.js`, `ui.js`) sorrendben töltődik be a `</body>` előtt.
+**`src/calculator.js`** — All business logic lives here, with a UMD-style wrapper that works in Node.js (`module.exports`) and in the browser (`window.Calculator`).
+- `getTransferTaxRate(kw, age)` — Transfer tax rate (based on kW and vehicle age)
+- `getAnnualTaxRate(age)` — Annual vehicle tax rate (Ft/kW, based on vehicle age)
+- `calculateTCO(params)` — Main calculation function; computes inflation-adjusted fuel, maintenance, insurance, depreciation, and opportunity costs in a year-by-year loop
 
-**`calculator.css`** — Az összes stílus külön fájlban; a `calculator.html` linkel rá.
+**`index.html`** — The complete UI in a single HTML file, linked to `src/calculator.css`. The two external scripts (`src/calculator.js`, `src/ui.js`) are loaded in order before `</body>`.
 
-**`ui.js`** — DOM interakciók és megjelenítési logika: `updateUI`, `calcTax`, `validate`, `calculateCar`, `calculateBoth`, `markWinner`, `markStale`. Függ a `Calculator` globálistól, amit a `calculator.js` definiál.
+**`src/calculator.css`** — All styles in a separate file; referenced by `index.html`.
 
-**`calculator.test.js`** — Node.js beépített `node:test` keretrendszerrel írt tesztek.
+**`src/ui.js`** — DOM interactions and display logic: `updateUI`, `calcTax`, `validate`, `calculateCar`, `calculateBoth`, `markWinner`, `markStale`. Depends on the `Calculator` global defined by `src/calculator.js`.
 
-**`reproduce_issue.js`** — Maradványfájl; csak egy redirect stub, ami `manual_test.js` használatára irányít. Érdemi logikát nem tartalmaz.
+**`tests/calculator.test.js`** — Tests written using the Node.js built-in `node:test` framework.
 
-## Kulcsos számítási részletek
+## Key Calculation Details
 
-- **EV üzemanyag-logika**: Ha a szükséges kWh <= napelem-többlet (solarExcess), az üzemanyagköltség nulla; felette az `evChargePrice` paraméterrel számol (default: 250 Ft/kWh), amit a UI a `global-evcharge` inputból tölt be.
-- **CAPEX**: Vételár + 12 000 Ft (okmányok) + átírási illeték (ICE esetén) + import költségek vagy 18 500 Ft eredetiségvizsgálat (belföldi esetén).
-- **Haszonáldozat (opportunity cost)**: `aktuális maradványérték × interestRate` évente (az értékcsökkenéssel párhuzamosan csökken).
-- **Infláció**: Az üzemanyag-, szerviz- és gumiköltségekre vonatkozik (`(1 + infláció%)^(i-1)` szorzóval); az adó nem inflálódik.
-- **Értékvesztés**: Csökkenő egyenleg alapú; az éves értékvesztés az aktuális értékre vetítve kerül számításra.
-- **Validációs határértékek**:
+- **EV fuel logic**: If the required kWh <= solar excess (solarExcess), fuel cost is zero; above that it uses the `evChargePrice` parameter (default: 250 Ft/kWh), which the UI loads from the `global-evcharge` input.
+- **CAPEX**: Purchase price + 12,000 Ft (documentation) + transfer tax (ICE only) + import costs or 18,500 Ft originality inspection (for domestic vehicles).
+- **Opportunity cost**: `current residual value × interestRate` annually (decreases in parallel with depreciation).
+- **Inflation**: Applied to fuel, service, and tire costs (using multiplier `(1 + inflation%)^(i-1)`); taxes are not inflation-adjusted.
+- **Depreciation**: Declining balance method; annual depreciation is calculated against the current value.
+- **Validation bounds**:
 
-  | Mező | Min | Max |
+  | Field | Min | Max |
   |---|---|---|
-  | Éves futás (km/év) | 1 | 200 000 |
-  | Tervezett évek | 1 | 20 |
-  | Állampapír kamat (%) | 0 | 20 |
-  | Üzemanyagár (Ft/L) | 0 | 2 000 |
-  | EV töltési ár (Ft/kWh) | 0 | 2 000 |
-  | Napelem-többlet (kWh/év) | 0 | 20 000 |
-  | Infláció (%) | 0 | 25 |
-  | Vételár (Ft) | 1 | 100 000 000 |
-  | Teljesítmény (LE) | 1 | 1 000 |
-  | Fogyasztás (L/100km vagy kWh/100km) | 0,1 | 50 |
-  | Értékvesztés ráta (%) | 0 | 50 |
-  | Szerviz (Ft/év) | 0 | 400 000 |
-  | Gumiabroncs (Ft/év) | 0 | 400 000 |
-  | Biztosítás (Ft/év) | 0 | 400 000 |
-  | Regisztrációs adó (Ft) | 0 | 10 000 000 |
-  | Hazahozatal egyéb (Ft) | 0 | 10 000 000 |
+  | Annual mileage (km/yr) | 1 | 200,000 |
+  | Planned years | 1 | 20 |
+  | Government bond interest rate (%) | 0 | 20 |
+  | Fuel price (Ft/L) | 0 | 2,000 |
+  | EV charging price (Ft/kWh) | 0 | 2,000 |
+  | Solar excess (kWh/yr) | 0 | 20,000 |
+  | Inflation (%) | 0 | 25 |
+  | Purchase price (Ft) | 1 | 100,000,000 |
+  | Power (HP) | 1 | 1,000 |
+  | Consumption (L/100km or kWh/100km) | 0.1 | 50 |
+  | Depreciation rate (%) | 0 | 50 |
+  | Service cost (Ft/yr) | 0 | 400,000 |
+  | Tires (Ft/yr) | 0 | 400,000 |
+  | Insurance (Ft/yr) | 0 | 400,000 |
+  | Registration tax (Ft) | 0 | 10,000,000 |
+  | Import other costs (Ft) | 0 | 10,000,000 |
 
-## Biztonsági elvek
+## Security Principles
 
-- **XSS-megelőzés**: A felhasználóra visszaírt tartalom renderelésénél (pl. hibaüzenetek) kizárólag a DOM API-t (`createElement`, `textContent`, `appendChild`) szabad használni. Az `innerHTML` használata tilos, mert XSS-sebezhetőséget okoz.
+- **XSS prevention**: When rendering any content written back to the user (e.g. error messages), only the DOM API (`createElement`, `textContent`, `appendChild`) may be used. Using `innerHTML` is forbidden as it introduces XSS vulnerabilities.

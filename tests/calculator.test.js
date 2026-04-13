@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const Calculator = require('./calculator.js');
+const Calculator = require('../src/calculator.js');
 
 test('getAnnualTaxRate returns correct values based on age', (t) => {
     assert.strictEqual(Calculator.getAnnualTaxRate(1), 345);
