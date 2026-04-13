@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autó Összehasonlító Kalkulátor (A vs B)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.4;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 10px;
+            background-color: #ecf0f1;
+        }
+
+        /* Layout Structure */
+        .global-settings {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .car-column {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border-top: 5px solid;
+        }
+
+        .car-a {
+            border-color: #3498db;
+        }
+
+        /* Blue */
+        .car-b {
+            border-color: #e67e22;
+        }
+
+        /* Orange */
+
+        h2 {
+            margin: 0 0 15px 0;
+            font-size: 1.2em;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h3 {
+            font-size: 1em;
+            color: #555;
+            border-bottom: 1px solid #eee;
+            margin-top: 15px;
+            padding-bottom: 5px;
+        }
+
+        /* Forms */
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-bottom: 3px;
+            color: #555;
+        }
+
+        .global-settings label {
+            color: #bdc3c7;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: 2px solid #3498db;
+        }
+
+        /* Toggles */
+        .radio-group {
+            display: flex;
+            background: #eee;
+            border-radius: 4px;
+            padding: 2px;
+            margin-bottom: 10px;
+        }
+
+        .radio-group label {
+            flex: 1;
+            text-align: center;
+            padding: 5px;
+            font-size: 0.85em;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: 0.2s;
+            margin: 0;
+        }
+
+        .radio-group input {
+            display: none;
+        }
+
+        .radio-group input:checked+label {
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Specific Colors for Toggles */
+        .car-a .radio-group input:checked+label {
+            background: #3498db;
+        }
+
+        .car-b .radio-group input:checked+label {
+            background: #e67e22;
+        }
+
+        /* Dynamic Sections */
+        .dynamic-box {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            border-left: 3px solid #ccc;
+        }
+
+        .highlight-input {
+            background-color: #fff3cd;
+        }
+
+        /* Action */
+        .action-bar {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .calc-btn {
+            padding: 15px 40px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #219150;
+            transition: transform 0.1s;
+        }
+
+        .calc-btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        /* Result Table */
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: none;
+            margin-bottom: 50px;
+        }
+
+        .result-table th,
+        .result-table td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .result-table th {
+            background: #34495e;
+            color: white;
+            font-weight: normal;
+        }
+
+        .result-table th:first-child {
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .result-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .col-a {
+            background-color: #ebf5fb;
+            color: #2980b9;
+            font-weight: bold;
+            width: 35%;
+        }
+
+        .col-b {
+            background-color: #fdf2e9;
+            color: #d35400;
+            font-weight: bold;
+            width: 35%;
+        }
+
+        td.winner {
+            color: #27ae60 !important;
+            background-color: #d5f5e3 !important;
+        }
+
+        .result-table .total-row td {
+            background-color: #2c3e50;
+            color: white;
+            font-size: 1.2em;
+            border: none;
+        }
+
+        .total-row .col-a {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .total-row .col-b {
+            background-color: #e67e22;
+            color: white;
+        }
+
+        /* Stale results */
+        .stale-warning {
+            display: none;
+            background: #fef9e7;
+            border: 1px solid #f39c12;
+            border-radius: 6px;
+            color: #7d6608;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .result-table.stale {
+            opacity: 0.45;
+            pointer-events: none;
+        }
+
+        /* Validation */
+        .input-error {
+            border-color: #e74c3c !important;
+            background-color: #fadbd8 !important;
+            outline: none;
+        }
+
+        .error-box {
+            background: #fadbd8;
+            border: 1px solid #e74c3c;
+            border-radius: 6px;
+            color: #922b21;
+            padding: 10px 15px;
+            margin-top: 10px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        .error-box ul {
+            margin: 5px 0 0 0;
+            padding-left: 20px;
+        }
+
+        @media (max-width: 800px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="global-settings">
+        <div
+            style="flex: 100%; text-align:center; font-weight:bold; margin-bottom:10px; border-bottom:1px solid #7f8c8d; padding-bottom:5px;">
+            KÖZÖS PARAMÉTEREK (Mindkét autóra érvényes)
+        </div>
+        <div>
+            <label>Éves futás (km)</label>
+            <input type="number" id="global-km" value="12000">
+        </div>
+        <div>
+            <label>Tervezett évek száma</label>
+            <input type="number" id="global-years" value="5">
+        </div>
+        <div>
+            <label>Állampapír kamat (%)</label>
+            <input type="number" id="global-interest" value="6.5" step="0.1">
+        </div>
+        <div>
+            <label>Üzemanyagár (Ft/L)</label>
+            <input type="number" id="global-fuelprice" value="610">
+        </div>
+        <div>
+            <label>Napelem Többlet (kWh)</label>
+            <input type="number" id="global-solar" value="4500">
+        </div>
+        <div>
+            <label>Infláció (%)</label>
+            <input type="number" id="global-inflation" value="3" step="0.1">
+        </div>
+        <div>
+            <label>EV töltési ár (Ft/kWh)</label>
+            <input type="number" id="global-evcharge" value="250">
+        </div>
+    </div>
+
+    <div class="main-container">
+
+        <div class="car-column car-a">
+            <h2 style="color:#2980b9;">"A" Autó</h2>
+
+            <div class="radio-group">
+                <input type="radio" id="a-dom" name="a-source" value="domestic" checked onchange="updateUI('a')">
+                <label for="a-dom">🇭🇺 Belföld</label>
+                <input type="radio" id="a-imp" name="a-source" value="import" onchange="updateUI('a')">
+                <label for="a-imp">🇩🇪 Import</label>
+            </div>
+            <div class="radio-group">
+                <input type="radio" id="a-ice" name="a-fuel" value="ice" checked onchange="updateUI('a')">
+                <label for="a-ice">Benzin/Dízel</label>
+                <input type="radio" id="a-ev" name="a-fuel" value="ev" onchange="updateUI('a')">
+                <label for="a-ev">Elektromos</label>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Vételár (Ft)</label>
+                    <input type="number" id="a-price" value="5000000">
+                </div>
+                <div class="form-group">
+                    <label>Kor (év)</label>
+                    <input type="number" id="a-age" value="8" onchange="calcTax('a')">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Teljesítmény (LE)</label>
+                    <input type="number" id="a-hp" value="120" onchange="calcTax('a')">
+                </div>
+                <div class="form-group">
+                    <label>Fogyasztás (L vagy kWh)</label>
+                    <input type="number" id="a-cons" value="7.5" step="0.1">
+                </div>
+            </div>
+
+            <div id="a-import-box" class="dynamic-box" style="display:none;">
+                <label>Import extra költségek:</label>
+                <div class="form-row">
+                    <div class="form-group"><label>Reg. adó</label><input type="number" id="a-regtax" value="50000">
+                    </div>
+                    <div class="form-group"><label>Hazahozatal</label><input type="number" id="a-importmisc"
+                            value="200000"></div>
+                </div>
+            </div>
+
+            <h3>Fenntartási Költségek (Éves)</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Szerviz</label>
+                    <input type="number" id="a-service" value="130000">
+                </div>
+                <div class="form-group">
+                    <label>Adó (Automatikus)</label>
+                    <input type="number" id="a-tax" value="0" readonly style="background:#f0f0f0;">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Gumiabroncs</label>
+                    <input type="number" id="a-tire" value="80000">
+                </div>
+                <div class="form-group">
+                    <label>Biztosítások</label>
+                    <input type="number" id="a-ins" value="180000">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Értékvesztés (%) / év</label>
+                <input type="number" id="a-dep-rate" value="10" step="1">
+            </div>
+        </div>
+
+        <div class="car-column car-b">
+            <h2 style="color:#d35400;">"B" Autó</h2>
+
+            <div class="radio-group">
+                <input type="radio" id="b-dom" name="b-source" value="domestic" onchange="updateUI('b')">
+                <label for="b-dom">🇭🇺 Belföld</label>
+                <input type="radio" id="b-imp" name="b-source" value="import" checked onchange="updateUI('b')">
+                <label for="b-imp">🇩🇪 Import</label>
+            </div>
+            <div class="radio-group">
+                <input type="radio" id="b-ice" name="b-fuel" value="ice" onchange="updateUI('b')">
+                <label for="b-ice">Benzin/Dízel</label>
+                <input type="radio" id="b-ev" name="b-fuel" value="ev" checked onchange="updateUI('b')">
+                <label for="b-ev">Elektromos</label>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Vételár (Ft)</label>
+                    <input type="number" id="b-price" value="8000000">
+                </div>
+                <div class="form-group">
+                    <label>Kor (év)</label>
+                    <input type="number" id="b-age" value="4" onchange="calcTax('b')">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Teljesítmény (LE)</label>
+                    <input type="number" id="b-hp" value="170" onchange="calcTax('b')">
+                </div>
+                <div class="form-group">
+                    <label>Fogyasztás (L vagy kWh)</label>
+                    <input type="number" id="b-cons" value="17" step="0.1">
+                </div>
+            </div>
+
+            <div id="b-import-box" class="dynamic-box" style="display:none;">
+                <label>Import extra költségek:</label>
+                <div class="form-row">
+                    <div class="form-group"><label>Reg. adó</label><input type="number" id="b-regtax" value="0"></div>
+                    <div class="form-group"><label>Hazahozatal</label><input type="number" id="b-importmisc"
+                            value="200000"></div>
+                </div>
+            </div>
+
+            <h3>Fenntartási Költségek (Éves)</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Szerviz</label>
+                    <input type="number" id="b-service" value="50000">
+                </div>
+                <div class="form-group">
+                    <label>Adó (Automatikus)</label>
+                    <input type="number" id="b-tax" value="0" readonly style="background:#f0f0f0;">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Gumiabroncs</label>
+                    <input type="number" id="b-tire" value="95000">
+                </div>
+                <div class="form-group">
+                    <label>Biztosítások</label>
+                    <input type="number" id="b-ins" value="200000">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Értékvesztés (%) / év</label>
+                <input type="number" id="b-dep-rate" value="10" step="1">
+            </div>
+        </div>
+
+    </div>
+
+    <div class="action-bar">
+        <button class="calc-btn" onclick="calculateBoth()">Összehasonlítás Futtatása</button>
+        <div id="error-box" class="error-box" style="display:none;"></div>
+    </div>
+
+    <div id="stale-warning" class="stale-warning">⚠ Az adatok megváltoztak — futtassa újra a számítást</div>
+
+    <table class="result-table" id="results">
+        <thead>
+            <tr>
+                <th>Költségtípus (Éves átlag)</th>
+                <th class="col-a">"A" Autó</th>
+                <th class="col-b">"B" Autó</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Üzemanyag költség</td>
+                <td class="col-a" id="res-a-fuel"></td>
+                <td class="col-b" id="res-b-fuel"></td>
+            </tr>
+            <tr>
+                <td>Szerviz + Adó + Gumi</td>
+                <td class="col-a" id="res-a-maint"></td>
+                <td class="col-b" id="res-b-maint"></td>
+            </tr>
+            <tr>
+                <td>Biztosítások</td>
+                <td class="col-a" id="res-a-ins"></td>
+                <td class="col-b" id="res-b-ins"></td>
+            </tr>
+            <tr>
+                <td>Értékcsökkenés</td>
+                <td class="col-a" id="res-a-dep"></td>
+                <td class="col-b" id="res-b-dep"></td>
+            </tr>
+            <tr>
+                <td>Haszonáldozat (Kamatveszteség)</td>
+                <td class="col-a" id="res-a-opp" style="color:#c0392b;"></td>
+                <td class="col-b" id="res-b-opp" style="color:#c0392b;"></td>
+            </tr>
+            <tr class="total-row">
+                <td>TELJES TCO (<span id="res-years"></span> évre)</td>
+                <td class="col-a" id="res-a-total-tco"></td>
+                <td class="col-b" id="res-b-total-tco"></td>
+            </tr>
+            <tr style="background:#ecf0f1; font-weight:bold;">
+                <td>Éves átlagos TCO</td>
+                <td class="col-a" id="res-a-total"></td>
+                <td class="col-b" id="res-b-total"></td>
+            </tr>
+            <tr>
+                <td>Havi költség</td>
+                <td class="col-a" id="res-a-monthly"></td>
+                <td class="col-b" id="res-b-monthly"></td>
+            </tr>
+            <tr>
+                <td>Ft / Km</td>
+                <td class="col-a" id="res-a-km"></td>
+                <td class="col-b" id="res-b-km"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script src="calculator.js"></script>
+    <script src="ui.js"></script>
+</body>
+
+</html>
